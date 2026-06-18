@@ -47,3 +47,4 @@ print("Бот запущен...")
 app.run_polling()
 python-telegram-bot
 yt-dlp
+python-3.11.8
