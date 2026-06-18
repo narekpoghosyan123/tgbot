@@ -1,0 +1,49 @@
+import os
+import yt_dlp
+import asyncio
+
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
+
+TOKEN = os.getenv("TOKEN")
+
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Привет! Отправь YouTube ссылку 🎵")
+
+
+def download_video(url):
+    ydl_opts = {
+        'format': 'bestaudio/best',
+        'outtmpl': 'audio.%(ext)s',
+        'noplaylist': True,
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }],
+    }
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        ydl.download([url])
+
+
+async def download_audio(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    url = update.message.text
+
+    await update.message.reply_text("⏳ Скачиваю...")
+
+    await asyncio.to_thread(download_video, url)
+
+    await update.message.reply_audio(audio=open("audio.mp3", "rb"))
+
+
+app = Application.builder().token(TOKEN).build()
+
+app.add_handler(CommandHandler("start", start))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, download_audio))
+
+print("Бот запущен...")
+app.run_polling()
+python-telegram-bot
+yt-dlp
